@@ -1,3 +1,5 @@
+https://roadmap.sh/projects/nginx-log-analyser
+
 Nginx Log Analyzer
 
 A simple Bash tool to analyze Nginx access logs from the command line. It parses a standard access log file and provides key insights such as the top IP addresses, requested paths, status codes, and user agents2•4.
