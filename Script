@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# A script to analyze an Nginx access log and provide key insights.
+
+# --- Functions ---
+
+# Function to print usage instructions and exit
+usage() {
+    echo "Usage: $0 <path-to-nginx-log-file>"
+    echo "Example: $0 access.log"
+    exit 1
+}
+
+# Function to display a section header
+print_header() {
+    echo "Top 5 $1:"
+}
+
+# --- Main Script Logic ---
+
+# 1. Check if a log file argument was provided
+if [ -z "$1" ]; then
+    echo "Error: No log file specified."
+    usage
+fi
+
+LOG_FILE="$1"
+
+# 2. Validate the log file
+if [ ! -f "$LOG_FILE" ]; then
+    echo "Error: File '$LOG_FILE' not found."
+    exit 1
+fi
+
+if [ ! -r "$LOG_FILE" ]; then
+    echo "Error: File '$LOG_FILE' is not readable."
+    exit 1
+fi
+
+echo "Analyzing log file: $LOG_FILE"
+echo "========================================"
+
+# 3. Generate Reports
+
+# Report 1: Top 5 IP addresses with the most requests
+# Extracts the first field (IP), sorts, counts unique occurrences, and sorts by count descending^1,2,3^.
+print_header "IP addresses with the most requests"
+awk '{print $1}' "$LOG_FILE" | sort | uniq -c | sort -rn | head -5 | awk '{printf "%s - %s requests\n", $2, $1}'
+echo ""
+
+# Report 2: Top 5 most requested paths
+# Extracts the 7th field (path), sorts, counts unique occurrences, and sorts by count descending^8,9^.
+print_header "most requested paths"
+awk '{print $7}' "$LOG_FILE" | sort | uniq -c | sort -rn | head -5 | awk '{printf "%s - %s requests\n", $2, $1}'
+echo ""
+
+# Report 3: Top 5 response status codes
+# Extracts the 9th field (status code), sorts, counts unique occurrences, and sorts by count descending^1,8,10^.
+print_header "response status codes"
+awk '{print $9}' "$LOG_FILE" | sort | uniq -c | sort -rn | head -5 | awk '{printf "%s - %s requests\n", $2, $1}'
+echo ""
+
+# Report 4: Top 5 user agents
+# This is the trickiest part as the user agent string is quoted and can contain spaces.
+# We use `cut` to isolate the quoted string (field 12) and then `uniq` to count it^4,5^.
+print_header "user agents"
+cut -d '"' -f 12 "$LOG_FILE" | sort | uniq -c | sort -rn | head -5 | awk '{printf "\"%s\" - %s requests\n", $2, $1}'
+echo ""
+
+echo "========================================"
+echo "Analysis complete."
